@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COACHIFY | Coach Dashboard</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- FullCalendar -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="../css/style.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        
+        .coach-sidebar {
+            background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            width: 260px;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        [data-theme="dark"] .coach-sidebar {
+            background: linear-gradient(180deg, #065f46 0%, #064e3b 100%);
+        }
+        
+        .coach-content {
+            margin-left: 260px;
+            transition: all 0.3s;
+        }
+        
+        .coach-sidebar.collapsed {
+            width: 80px;
+        }
+        
+        .coach-content.expanded {
+            margin-left: 80px;
+        }
+        
+        .coach-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s;
+            color: var(--text-color);
+        }
+        
+        .coach-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        }
+        
+        .coach-badge {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .btn-coach {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        
+        .btn-coach:hover {
+            background: #059669;
+            color: white;
+        }
+        
+        .session-card {
+            border-left: 4px solid #10b981;
+            transition: all 0.3s;
+            background: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .session-card:hover {
+            background-color: var(--table-hover-bg);
+            transform: translateX(5px);
+        }
+
+        .navbar-custom {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .text-muted {
+            color: var(--text-muted) !important;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .form-control {
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .fc { /* FullCalendar dark mode adjustments */
+            color: var(--text-color);
+        }
+        .fc-theme-standard td, .fc-theme-standard th {
+            border-color: var(--border-color);
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #10b981;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .coach-badge {
+            background: rgba(255, 255, 255, 0.2) !important;
+            color: white !important;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .calendar-container {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+        }
+        
+        .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+        }
+        
+        .progress-coach {
+            height: 8px;
+            border-radius: 4px;
+            background-color: var(--border-color);
+        }
+        
+        .progress-coach-bar {
+            background-color: #10b981;
+            border-radius: 4px;
+        }
+        
+        .message-bubble {
+            background: var(--table-hover-bg);
+            color: var(--text-color);
+            border-radius: 15px;
+            padding: 10px 15px;
+            max-width: 70%;
+        }
+        
+        .message-bubble.self {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            margin-left: auto;
+        }
+    </style>
+</head>
+<body class="page-fade-in">
+    <!-- Sidebar -->
+    <div class="coach-sidebar" id="sidebar">
+        <div class="p-4">
+            <div class="d-flex align-items-center mb-5">
+                <div class="me-3">
+                    <i class="bi bi-person-badge fs-4"></i>
+                </div>
+                <h4 class="mb-0" id="logo-text">Coach Portal</h4>
+                <button class="btn btn-sm btn-light ms-auto d-none d-md-block" id="toggle-sidebar">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+            </div>
+            
+            <div class="mb-4 text-center">
+                <div class="avatar mx-auto mb-2" id="coachAvatar">
+                    <span id="coachInitials">C</span>
+                </div>
+                <h6 class="mb-1" id="coachName">Coach Name</h6>
+                <p class="text-white-50 small mb-0" id="coachEmail">coach@email.com</p>
+                <span class="coach-badge mt-2 d-inline-block" id="coachSpecialization">Specialization</span>
+            </div>
+            
+            <nav class="nav flex-column">
+                <a class="nav-link text-white mb-2 active" href="#" data-page="dashboard">
+                    <i class="bi bi-speedometer2 me-3"></i>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+                <a class="nav-link text-white mb-2" href="#" data-page="calendar">
+                    <i class="bi bi-calendar me-3"></i>
+                    <span class="nav-text">Calendar</span>
+                </a>
+                <a class="nav-link text-white mb-2" href="#" data-page="sessions">
+                    <i class="bi bi-calendar-check me-3"></i>
+                    <span class="nav-text">Sessions</span>
+                    <span class="badge bg-light text-dark float-end mt-1" id="sessionCount">0</span>
+                </a>
+                <a class="nav-link text-white mb-2" href="#" data-page="students">
+                    <i class="bi bi-people me-3"></i>
+                    <span class="nav-text">Students</span>
+                    <span class="badge bg-light text-dark float-end mt-1" id="studentCount">0</span>
+                </a>
+                <a class="nav-link text-white mb-2" href="#" data-page="messages">
+                    <i class="bi bi-chat me-3"></i>
+                    <span class="nav-text">Messages</span>
+                    <span class="badge bg-danger float-end mt-1" id="messageCount">3</span>
+                </a>
+                <a class="nav-link text-white mb-2" href="#" data-page="materials">
+                    <i class="bi bi-folder me-3"></i>
+                    <span class="nav-text">Materials</span>
+                </a>
+                <a class="nav-link text-white mb-2" href="#" data-page="reports">
+                    <i class="bi bi-graph-up me-3"></i>
+                    <span class="nav-text">Reports</span>
+                </a>
+                <div class="mt-5 pt-4 border-top border-white-20">
+                    <a class="nav-link text-white mb-2" href="#" id="logoutBtn">
+                        <i class="bi bi-box-arrow-right me-3"></i>
+                        <span class="nav-text">Logout</span>
+                    </a>
+                </div>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="coach-content" id="mainContent">
+        <!-- Top Navbar -->
+        <nav class="navbar navbar-light bg-white navbar-expand-lg px-4 py-3 shadow-sm">
+            <div class="container-fluid">
+                <button class="btn btn-outline-primary d-md-none" id="mobile-toggle">
+                    <i class="bi bi-list"></i>
+                </button>
+                
+                <div class="d-flex align-items-center ms-auto">
+                    <!-- Quick Stats -->
+                    <div class="d-none d-md-flex align-items-center me-4">
+                        <div class="text-end me-3">
+                            <div class="small text-muted">Today's Sessions</div>
+                            <div class="fw-bold" id="todaySessions">0</div>
+                        </div>
+                        <div class="text-end me-3">
+                            <div class="small text-muted">Total Students</div>
+                            <div class="fw-bold" id="totalStudents">0</div>
+                        </div>
+                        <div class="text-end">
+                            <div class="small text-muted">Rating</div>
+                            <div class="fw-bold">4.8 <i class="bi bi-star-fill text-warning"></i></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Notifications -->
+                    <div class="position-relative me-3">
+                        <button class="btn btn-light position-relative" id="notificationBtn">
+                            <i class="bi bi-bell"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge">3</span>
+                        </button>
+                    </div>
+                    
+                    <!-- User Profile -->
+                    <div class="dropdown">
+                        <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+                            <div class="avatar me-2" id="navAvatar">
+                                <span id="navInitials">C</span>
+                            </div>
+                            <div class="d-none d-md-block">
+                                <span class="fw-medium" id="navCoachName">Coach Name</span>
+                                <br>
+                                <small class="text-muted">Coach</small>
+                            </div>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" data-page="profile"><i class="bi bi-person me-2"></i>Profile</a></li>
+                            <li><a class="dropdown-item" href="#" data-page="availability"><i class="bi bi-clock me-2"></i>Availability</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#" id="navLogout"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Page Content -->
+        <div class="container-fluid p-4" id="pageContent">
+            <!-- Content will be loaded here dynamically -->
+            <div id="loading" class="text-center py-5">
+                <div class="spinner-border text-success" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3">Loading coach dashboard...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Session Modal -->
+<div class="modal fade" id="createSessionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Schedule New Session</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="createSessionForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Title *</label>
+                            <input type="text" class="form-control" name="title" required placeholder="e.g., Math Tutoring Session">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Student *</label>
+                            <select class="form-control" name="studentId" id="studentSelect" required>
+                                <option value="">Select Student</option>
+                                <!-- Students will be loaded here dynamically -->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="3" placeholder="Brief description of the session..."></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Date *</label>
+                            <input type="date" class="form-control" name="date" required id="sessionDate" min="${new Date().toISOString().split('T')[0]}">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Start Time *</label>
+                            <input type="time" class="form-control" name="startTime" required id="startTime">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">End Time *</label>
+                            <input type="time" class="form-control" name="endTime" required id="endTime">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Session Type</label>
+                            <select class="form-control" name="type">
+                                <option value="individual">Individual</option>
+                                <option value="group">Group</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Platform</label>
+                            <select class="form-control" name="platform">
+                                <option value="zoom">Zoom</option>
+                                <option value="google_meet">Google Meet</option>
+                                <option value="microsoft_teams">Microsoft Teams</option>
+                                <option value="in_person">In Person</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Schedule Session</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+    <!-- Upload Material Modal -->
+    <div class="modal fade" id="uploadMaterialModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Upload Learning Material</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="uploadMaterialForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Title *</label>
+                            <input type="text" class="form-control" name="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">File *</label>
+                            <input type="file" class="form-control" name="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.png,.mp4" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Visible To</label>
+                            <select class="form-control" name="visibility" multiple id="studentVisibility">
+                                <!-- Students will be loaded here -->
+                            </select>
+                            <small class="text-muted">Hold Ctrl to select multiple students</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-coach">Upload Material</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/coachDashboard.js"></script>
+    <!-- Add Bootstrap Modal JS if not already included -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Global error handler
+    window.addEventListener('error', function(e) {
+        console.error('Global error:', e.error);
+        
+        // Show error in page content
+        const pageContent = document.getElementById('pageContent');
+        if (pageContent) {
+            pageContent.innerHTML = `
+                <div class="alert alert-danger">
+                    <h4>JavaScript Error</h4>
+                    <p>${e.error.message}</p>
+                    <button class="btn btn-sm btn-success" onclick="location.reload()">Reload Page</button>
+                </div>
+            `;
+        }
+    });
+
+    // Check if dashboard initialized
+    setTimeout(() => {
+        if (!window.coachDashboard) {
+            console.error('Coach dashboard not initialized');
+            const loading = document.getElementById('loading');
+            if (loading) {
+                loading.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h4>Dashboard Failed to Load</h4>
+                        <p>Check browser console for errors</p>
+                        <button class="btn btn-sm btn-success" onclick="location.reload()">Reload</button>
+                        <button class="btn btn-sm btn-secondary" onclick="location.href='/'">Go to Login</button>
+                    </div>
+                `;
+            }
+        }
+    }, 5000);
+</script>
+<script>
+    // Quick fix for student dropdown
+    document.addEventListener('DOMContentLoaded', function() {
+        // When session modal opens, load students
+        const sessionModal = document.getElementById('createSessionModal');
+        if (sessionModal) {
+            sessionModal.addEventListener('show.bs.modal', function() {
+                loadStudentsForDropdown();
+            });
+        }
+        
+        async function loadStudentsForDropdown() {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/coach/students', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                const studentSelect = document.getElementById('studentSelect');
+                
+                if (studentSelect && data.success) {
+                    // Clear existing options (keep first option)
+                    while (studentSelect.options.length > 1) {
+                        studentSelect.remove(1);
+                    }
+                    
+                    // Add student options
+                    data.data.forEach(student => {
+                        const option = document.createElement('option');
+                        option.value = student._id;
+                        option.textContent = `${student.firstName} ${student.lastName}`;
+                        studentSelect.appendChild(option);
+                    });
+                    
+                    console.log('Loaded students for session creation');
+                }
+            } catch (error) {
+                console.error('Error loading students:', error);
+            }
+        }
+    });
+</script>
+<script src="../js/theme.js"></script>
+</body>
+</html>

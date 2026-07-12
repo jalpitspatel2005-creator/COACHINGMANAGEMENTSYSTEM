@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COACHIFY | Admin Dashboard</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link href="../css/style.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+        
+        .sidebar {
+            background: linear-gradient(180deg, #4361ee 0%, #3a0ca3 100%);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            width: 260px;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        [data-theme="dark"] .sidebar {
+            background: linear-gradient(180deg, #1e1b4b 0%, #0f172a 100%);
+        }
+        
+        .main-content {
+            margin-left: 260px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar.collapsed {
+            width: 80px;
+        }
+        
+        .main-content.expanded {
+            margin-left: 80px;
+        }
+        
+        .navbar-custom {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 999;
+        }
+
+        .navbar-custom .nav-link, .navbar-custom .navbar-brand {
+            color: var(--text-color);
+        }
+        
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        }
+        
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .dashboard-chart {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+        }
+        
+        .table-custom {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn-admin {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        
+        .btn-admin:hover {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .quick-action {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: 2px solid var(--border-color);
+            color: var(--text-color);
+        }
+        
+        .quick-action:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-3px);
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .form-control-custom {
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 15px;
+            transition: all 0.3s;
+        }
+
+        .form-control-custom:focus {
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger-color);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+        }
+        
+        .modal-custom .modal-content {
+            border-radius: 15px;
+            border: none;
+        }
+        
+        .form-control-custom {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 10px 15px;
+            transition: all 0.3s;
+        }
+        
+        .form-control-custom:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-inactive {
+            background: #f1f5f9;
+            color: #475569;
+        }
+        
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .action-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .quick-action {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        
+        .quick-action:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-3px);
+        }
+    </style>
+</head>
+<body class="page-fade-in">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="p-4">
+            <div class="d-flex align-items-center mb-5">
+                <div class="me-3">
+                    <i class="bi bi-speedometer2 fs-4"></i>
+                </div>
+                <h4 class="mb-0" id="logo-text">COACHIFY</h4>
+                <button class="btn btn-sm btn-light ms-auto d-none d-md-block" id="toggle-sidebar">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+            </div>
+            
+            <div class="mb-4">
+                <div class="user-avatar mx-auto mb-2">
+                    <span id="userInitials">A</span>
+                </div>
+                <h6 class="text-center mb-1" id="userName">Super Admin</h6>
+                <p class="text-center text-white-50 small mb-0" id="userEmail">admin@coachify.com</p>
+            </div>
+            
+            <nav class="nav flex-column">
+                <a class="nav-link text-white mb-2 active" href="#" data-page="dashboard">
+                    <i class="bi bi-speedometer2 me-3"></i>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+                <a class="nav-link text-white mb-2" href="#" data-page="coaches">
+                    <i class="bi bi-person-badge me-3"></i>
+                    <span class="nav-text">Coaches</span>
+                </a>
+                <a class="nav-link text-white mb-2" href="#" data-page="students">
+                    <i class="bi bi-people me-3"></i>
+                    <span class="nav-text">Students</span>
+                    <span class="badge bg-danger float-end mt-1" id="pendingCount">0</span>
+                </a>
+                <a class="nav-link text-white mb-2" href="#" data-page="sessions">
+                    <i class="bi bi-calendar-check me-3"></i>
+                    <span class="nav-text">Sessions</span>
+                </a>
+                <a class="nav-link text-white mb-2" href="#" data-page="categories">
+                    <i class="bi bi-tags me-3"></i>
+                    <span class="nav-text">Categories</span>
+                </a>
+                <a class="nav-link text-white mb-2" href="#" data-page="audit">
+                    <i class="bi bi-shield-check me-3"></i>
+                    <span class="nav-text">Audit Logs</span>
+                </a>
+                <a class="nav-link text-white mb-2" href="#" data-page="settings">
+                    <i class="bi bi-gear me-3"></i>
+                    <span class="nav-text">Settings</span>
+                </a>
+                <div class="mt-5 pt-4 border-top border-white-20">
+                    <a class="nav-link text-white mb-2" href="#" id="logoutBtn">
+                        <i class="bi bi-box-arrow-right me-3"></i>
+                        <span class="nav-text">Logout</span>
+                    </a>
+                </div>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Top Navbar -->
+        <nav class="navbar navbar-custom navbar-expand-lg px-4 py-3">
+            <div class="container-fluid">
+                <button class="btn btn-outline-primary d-md-none" id="mobile-toggle">
+                    <i class="bi bi-list"></i>
+                </button>
+                
+                <div class="d-flex align-items-center ms-auto">
+                    <div class="position-relative me-4">
+                        <button class="btn btn-light position-relative" id="notificationBtn">
+                            <i class="bi bi-bell"></i>
+                            <span class="notification-badge" id="notificationCount">3</span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end p-0" id="notificationDropdown" style="width: 300px; display: none;">
+                            <div class="p-3 border-bottom">
+                                <h6 class="mb-0">Notifications</h6>
+                            </div>
+                            <div class="list-group list-group-flush" id="notificationList">
+                                <!-- Notifications will be loaded here -->
+                            </div>
+                            <div class="p-2 text-center border-top">
+                                <a href="#" class="text-decoration-none small">View All</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="dropdown">
+                        <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+                            <div class="user-avatar me-2">
+                                <span id="navInitials">A</span>
+                            </div>
+                            <div class="d-none d-md-block">
+                                <span class="fw-medium" id="navUserName">Super Admin</span>
+                                <br>
+                                <small class="text-muted" id="navUserRole">Administrator</small>
+                            </div>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" data-page="profile"><i class="bi bi-person me-2"></i>Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#" id="navLogout"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Page Content -->
+        <div class="container-fluid p-4" id="pageContent">
+            <!-- Dashboard content will be loaded here dynamically -->
+            <div id="loading" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3">Loading dashboard...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Coach Modal -->
+    <div class="modal fade" id="createCoachModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content modal-custom">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create New Coach</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="createCoachForm">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">First Name *</label>
+                                <input type="text" class="form-control form-control-custom" name="firstName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Last Name *</label>
+                                <input type="text" class="form-control form-control-custom" name="lastName" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email *</label>
+                            <input type="email" class="form-control form-control-custom" name="email" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Password *</label>
+                                <input type="password" class="form-control form-control-custom" name="password" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Phone</label>
+                                <input type="tel" class="form-control form-control-custom" name="phone">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Specialization</label>
+                                <input type="text" class="form-control form-control-custom" name="specialization">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Experience (years)</label>
+                                <input type="number" class="form-control form-control-custom" name="experience" min="0">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Hourly Rate ($)</label>
+                            <input type="number" class="form-control form-control-custom" name="hourlyRate" min="0" step="0.01">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Bio</label>
+                            <textarea class="form-control form-control-custom" name="bio" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-admin">Create Coach</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Category Modal -->
+    <div class="modal fade" id="createCategoryModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content modal-custom">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="createCategoryForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Category Name *</label>
+                            <input type="text" class="form-control form-control-custom" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control form-control-custom" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Base Price ($)</label>
+                                <input type="number" class="form-control form-control-custom" name="basePrice" min="0" step="0.01">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Icon Class</label>
+                                <input type="text" class="form-control form-control-custom" name="icon" placeholder="bi bi-chat">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-admin">Create Category</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/adminDashboard.js"></script>
+    <!-- Add this right before </body> -->
+<script>
+    // Global error handler
+    window.addEventListener('error', function(e) {
+        console.error('Global error:', e.error);
+        
+        // Show error in page content
+        const pageContent = document.getElementById('pageContent');
+        if (pageContent) {
+            pageContent.innerHTML = `
+                <div class="alert alert-danger">
+                    <h4>JavaScript Error</h4>
+                    <p>${e.error.message}</p>
+                    <button class="btn btn-primary" onclick="location.reload()">Reload Page</button>
+                </div>
+            `;
+        }
+    });
+
+    // Check if dashboard initialized
+    setTimeout(() => {
+        if (!window.adminDashboard) {
+            console.error('Dashboard not initialized');
+            const loading = document.getElementById('loading');
+            if (loading) {
+                loading.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h4>Dashboard Failed to Load</h4>
+                        <p>Check browser console for errors</p>
+                        <button class="btn btn-primary" onclick="location.reload()">Reload</button>
+                        <button class="btn btn-secondary" onclick="location.href='/'">Go to Login</button>
+                    </div>
+                `;
+            }
+        }
+    }, 3000);
+</script>
+    <script src="../js/theme.js"></script>
+</body>
+</html>
